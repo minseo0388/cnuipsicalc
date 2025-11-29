@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>수시 점수 환산</title>
+    <link rel="stylesheet" href="susi.css">
+</head>
+
+<body>
+    <!-- Background Slideshow -->
+    <div id="bg-slideshow"></div>
+    <div id="bg-overlay"></div>
+
+    <script>
+        const images = [
+            'media/background/cnu_0463.jpg',
+            'media/background/cnu_0467.jpg',
+            'media/background/cnu_0470-1.jpg',
+            'media/background/cnu_0472-1.jpg',
+            'media/background/cnu_0474.jpg'
+        ];
+        const slideshowContainer = document.getElementById('bg-slideshow');
+        let currentIndex = 0;
+        images.forEach((src, index) => {
+            const div = document.createElement('div');
+            div.className = 'slide-item';
+            div.style.backgroundImage = `url('${src}')`;
+            if (index === 0) div.classList.add('active');
+            slideshowContainer.appendChild(div);
+        });
+        function changeSlide() {
+            const slides = document.querySelectorAll('.slide-item');
+            if (slides.length > 0) {
+                slides[currentIndex].classList.remove('active');
+                currentIndex = (currentIndex + 1) % slides.length;
+                slides[currentIndex].classList.add('active');
+            }
+        }
+        setInterval(changeSlide, 5000);
+    </script>
+
+    <div class="content-wrapper">
+        <div class="container">
+            <h1>2026학년도 수시 학생부교과 점수 환산</h1>
+
+            <div class="excluded-notice">
+                <p><strong>⚠️ 현재 계산기는 학생부교과 100% 전형을 기준으로 합니다.</strong></p>
+                <p><strong>면접/실기가 포함된 다음 전형은 제외됩니다:</strong></p>
+                <ul>
+                    <li>학생부교과(일부 사범대): 국어교육과, 수학교육과, 화학공학교육과, 기술교육과</li>
+                    <li>실기(일반전형): 무용학과, 음악과, 관현악과, 회화과, 조소과 (실기 포함)</li>
+                </ul>
+                <p><strong>또한, 수능최저학력기준 충족 여부는 계산하지 않습니다.</strong></p>
+            </div>
+
+            <form id="susi-form">
+
+                <h2>지원 계열 및 기본 정보</h2>
+                <div class="form-group">
+                    <label for="계열">지원 계열 (등급별 환산 점수 기준)</label>
+                    <select id="계열" required>
+                        <option value="인문자연">인문/자연계열 (1등급: 100점, 9등급: 20점)</option>
+                        <option value="예체능">예체능계열 (1등급: 90점, 9등급: 50점)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="violence_penalty_susi">학교폭력 조치사항 (최종 호수 기준 감점)</label>
+                    <select id="violence_penalty_susi">
+                        <option value="0">해당 없음</option>
+                        <option value="1">1~3호 (-2점)</option>
+                        <option value="2">4~5호 (-6점)</option>
+                        <option value="3">6~7호 (-10점)</option>
+                        <option value="4">8~9호 (-20점)</option>
+                    </select>
+                </div>
+
+                <p class="notice">반영 교과: 국/수/영/한/사/과/기가/제2외/한문의 석차등급 또는 진로선택(변환등급)을 반영합니다.</p>
+
+                <div class="grade-section">
+                    <h2>1. 일반선택과목 (석차등급 1~9)</h2>
+                    <p>석차등급이 표기된 과목의 성적을 입력하세요.</p>
+                    <table class="grade-table" id="general-grade-table">
+                        <thead>
+                            <tr>
+                                <th class="subject-col">과목명</th>
+                                <th class="grade-col">석차등급</th>
+                                <th class="unit-col">이수단위</th>
+                                <th class="action-col">삭제</th>
+                            </tr>
+                        </thead>
+                        <tbody id="general-grade-tbody">
+                            <!-- Rows will be added here -->
+                        </tbody>
+                    </table>
+                    <button type="button" class="add-btn" onclick="addGeneralGradeRow()">+ 일반선택 과목 추가</button>
+                </div>
+
+                <div class="grade-section">
+                    <h2>2. 진로선택과목 (성취도 및 과목별 비율)</h2>
+                    <p>성취도별 학생 비율(%)은 해당 과목의 비율을 입력하세요.</p>
+                    <div id="career-grade-container">
+                        <!-- Career items will be added here -->
+                    </div>
+                    <button type="button" class="add-btn" onclick="addCareerGradeItem()">+ 진로선택 과목 추가</button>
+                </div>
+
+                <button type="submit">수시 점수 환산하기</button>
+            </form>
+
+            <div id="result-susi" class="result-box" style="display: none;">
+                <h2>최종 교과 환산 총점</h2>
+                <div class="final-score-display"><span id="final_total_susi"></span>점</div>
+
+                <p><strong>세부 내역</strong></p>
+                <div class="result-item"><strong>이수단위 가중 평균 등급:</strong> <span id="avg_grade_output"></span>등급</div>
+                <div class="result-item"><strong>환산 교과 점수 (감점 제외):</strong> <span id="교과_환산점수"></span>점</div>
+                <div class="result-item"><strong>학교폭력 감점:</strong> <span id="violence_deduction_susi"></span>점</div>
+            </div>
+
+            <a href="index.html" class="back-link">메인 페이지로 돌아가기</a>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-info">
+            <p style="margin-top: 15px; color: #aaa;">COPYRIGHT ⓒ 모집요강 : 충남대학교, 웹 : Choi Minseo</p>
+            <p style="margin-top: 15px; color: #aaa;">환산 계산식의 구현 오류 등으로 인한 책임은 사용자 본인에게 있으며, 개발자는 책임지지 않습니다.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('susi-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            calculateSusiScore();
+        });
+
+        // 석차등급 점수표
+        const GRADE_SCORES_INMUN = { 1: 100, 2: 90, 3: 80, 4: 70, 5: 60, 6: 50, 7: 40, 8: 30, 9: 20 };
+        const GRADE_SCORES_ART = { 1: 90, 2: 85, 3: 80, 4: 75, 5: 70, 6: 65, 7: 60, 8: 55, 9: 50 };
+
+        // 누적비율에 따른 석차등급 변환표
+        const GRADE_RANGE = [
+            { min: 96.1, max: 100.0, grade: 1 }, { min: 89.1, max: 96.0, grade: 2 },
+            { min: 77.1, max: 89.0, grade: 3 }, { min: 60.1, max: 77.0, grade: 4 },
+            { min: 40.1, max: 60.0, grade: 5 }, { min: 23.1, max: 40.0, grade: 6 },
+            { min: 11.1, max: 23.0, grade: 7 }, { min: 4.1, max: 11.0, grade: 8 },
+            { min: 0.0, max: 4.0, grade: 9 }
+        ];
+
+        // --- DOM MANIPULATION FUNCTIONS ---
+
+        function addGeneralGradeRow() {
+            const tbody = document.getElementById('general-grade-tbody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td class="subject-col"><input type="text" placeholder="예: 국어" required></td>
+                <td class="grade-col"><input type="number" class="grade-value general-grade-value" placeholder="1~9" min="1" max="9" required></td>
+                <td class="unit-col"><input type="number" class="unit-cell general-unit-cell" placeholder="단위" min="1" required></td>
+                <td class="action-col"><button type="button" class="remove-btn" onclick="removeGradeRow(this)">삭제</button></td>
+            `;
+            tbody.appendChild(newRow);
+        }
+
+        function removeGradeRow(button) {
+            button.closest('tr').remove();
+        }
+
+        function addCareerGradeItem() {
+            const container = document.getElementById('career-grade-container');
+            const newIndex = container.querySelectorAll('.career-grade-item').length;
+            const newDiv = document.createElement('div');
+            newDiv.classList.add('career-grade-item');
+            newDiv.setAttribute('data-index', newIndex);
+            newDiv.innerHTML = `
+                <h3>진로선택 과목 ${newIndex + 1}</h3>
+                <table class="grade-table">
+                     <thead>
+                        <tr>
+                            <th class="subject-col">과목명</th>
+                            <th class="grade-col">성취도</th>
+                            <th class="unit-col">이수단위</th>
+                            <th class="action-col">삭제</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="subject-col"><input type="text" class="career-subject-name" placeholder="예: 기하" required></td>
+                            <td class="grade-col">
+                                <select class="career-grade-value" required>
+                                    <option value="">선택</option>
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="C">C</option>
+                                </select>
+                            </td>
+                            <td class="unit-col"><input type="number" class="unit-cell career-unit-cell" placeholder="단위" min="1" required></td>
+                            <td class="action-col"><button type="button" class="remove-btn" onclick="removeCareerGradeItem(this)">삭제</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px;">
+                    <p style="margin-top: 0; margin-bottom: 10px; font-weight: 600; font-size: 0.9rem;">성취도별 학생 비율 (%)</p>
+                    <div class="rate-input-row">
+                        <div><label>A 비율</label><input type="number" class="A_rate" min="0" max="100" step="0.01" value="0" required></div>
+                        <div><label>B 비율</label><input type="number" class="B_rate" min="0" max="100" step="0.01" value="0" required></div>
+                        <div><label>C 비율</label><input type="number" class="C_rate" min="0" max="100" step="0.01" value="0" required></div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(newDiv);
+        }
+
+        function removeCareerGradeItem(button) {
+            button.closest('.career-grade-item').remove();
+        }
+
+
+        // --- CALCULATION CORE FUNCTIONS ---
+
+        function getTransformedGrade(achievement, A_rate, B_rate, C_rate) {
+            // 요강 89쪽: 진로선택과목 변환 석차등급 반영방법
+
+            // 유효성 검사
+            if (Math.abs(A_rate + B_rate + C_rate - 100) > 0.1) {
+                return 0; // 비율 오류
+            }
+            if (A_rate < 0 || B_rate < 0 || C_rate < 0) {
+                return 0; // 비율 오류
+            }
+
+            let accumulated_rate_percentage = 0;
+            const B_RATE = B_rate; // 퍼센트 값 그대로 사용
+            const C_RATE = C_rate;
+
+            if (achievement === 'A') {
+                return 1; // A 성취도는 학생비율에 관계없이 1등급 부여
+            } else if (achievement === 'B') {
+                // B: 누적비율[(성취도 B의 학생비율 + 성취도 C의 학생비율)]
+                accumulated_rate_percentage = B_RATE + C_RATE;
+            } else if (achievement === 'C') {
+                // C: 누적비율[(성취도 C의 학생비율)]
+                accumulated_rate_percentage = C_RATE;
+            } else {
+                return 9; // 유효하지 않은 성취도
+            }
+
+            // 누적비율에 따른 석차등급 산출
+            const rate_percentage = accumulated_rate_percentage;
+
+            for (const range of GRADE_RANGE) {
+                // 누적비율 범위에 포함되는 경우 등급 반환
+                if (rate_percentage > range.min && rate_percentage <= range.max) {
+                    return range.grade;
+                }
+            }
+
+            if (rate_percentage >= 96.1) return 1;
+
+            return 9; // 그 외
+        }
+
+        function calculateSusiScore() {
+            const account_type = document.getElementById('계열').value;
+            const penalty_level = document.getElementById('violence_penalty_susi').value;
+
+            const generalRows = document.querySelectorAll('#general-grade-tbody tr');
+            const careerItems = document.querySelectorAll('.career-grade-item');
+
+            let total_score_times_unit = 0;
+            let total_units = 0;
+            let total_grade_times_unit = 0;
+
+            const score_map = account_type === '인문자연' ? GRADE_SCORES_INMUN : GRADE_SCORES_ART;
+            let all_valid = true;
+
+            // 1. 일반선택과목 (석차등급) 처리
+            generalRows.forEach(row => {
+                const gradeInput = row.querySelector('.general-grade-value');
+                const unitsInput = row.querySelector('.general-unit-cell');
+
+                const gradeValue = parseInt(gradeInput.value);
+                const units = parseInt(unitsInput.value);
+
+                if (isNaN(gradeValue) || gradeValue < 1 || gradeValue > 9 || isNaN(units) || units < 1) {
+                    all_valid = false;
+                    return;
+                }
+
+                const grade_score = score_map[gradeValue];
+
+                total_score_times_unit += grade_score * units;
+                total_units += units;
+                total_grade_times_unit += gradeValue * units;
+            });
+
+            // 2. 진로선택과목 (성취도 및 비율) 처리
+            careerItems.forEach(item => {
+                const subjectName = item.querySelector('.career-subject-name').value;
+                const gradeValue = item.querySelector('.career-grade-value').value.trim().toUpperCase();
+                const units = parseInt(item.querySelector('.career-unit-cell').value);
+
+                const A_rate = parseFloat(item.querySelector('.A_rate').value) || 0;
+                const B_rate = parseFloat(item.querySelector('.B_rate').value) || 0;
+                const C_rate = parseFloat(item.querySelector('.C_rate').value) || 0;
+
+                if (isNaN(units) || units < 1) {
+                    all_valid = false;
+                    return;
+                }
+
+                const final_grade = getTransformedGrade(gradeValue, A_rate, B_rate, C_rate);
+
+                if (final_grade === 0) {
+                    all_valid = false;
+                    alert(`[${subjectName}] 과목의 비율 입력 오류입니다. 합계가 100%에 근접해야 합니다.`);
+                    return;
+                }
+                if (final_grade === 9 && !['A', 'B', 'C'].includes(gradeValue)) {
+                    all_valid = false;
+                    alert(`[${subjectName}] 과목의 성취도는 A, B, C 중 하나여야 합니다.`);
+                    return;
+                }
+
+                const grade_score = score_map[final_grade];
+
+                total_score_times_unit += grade_score * units;
+                total_units += units;
+                total_grade_times_unit += final_grade * units;
+            });
+
+            if (!all_valid || total_units === 0) {
+                if (total_units === 0) alert("반영할 과목을 1개 이상 입력해주세요.");
+                else alert("입력값을 확인해주세요.");
+                return;
+            }
+
+            // 3. 최종 계산
+            const average_score_100 = total_score_times_unit / total_units;
+            const average_grade_approx = total_grade_times_unit / total_units;
+
+            // 학교폭력 감점
+            let violence_deduction = 0;
+            if (penalty_level == 1) violence_deduction = 2;
+            else if (penalty_level == 2) violence_deduction = 6;
+            else if (penalty_level == 3) violence_deduction = 10;
+            else if (penalty_level == 4) violence_deduction = 20;
+
+            const final_total_score = average_score_100 - violence_deduction;
+
+            // 4. 결과 출력
+            document.getElementById('avg_grade_output').textContent = average_grade_approx.toFixed(3);
+            document.getElementById('교과_환산점수').textContent = average_score_100.toFixed(3);
+            document.getElementById('violence_deduction_susi').textContent = violence_deduction.toFixed(1);
+            document.getElementById('final_total_susi').textContent = final_total_score.toFixed(3);
+
+            document.getElementById('result-susi').style.display = 'block';
+        }
+
+        // 초기 로드 시 최소 1개 입력창 추가
+        document.addEventListener('DOMContentLoaded', () => {
+            for (let i = 0; i < 5; i++) addGeneralGradeRow();
+            addCareerGradeItem();
+        });
+    </script>
+</body>
+
+</html>

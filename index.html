@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>충남대학교 2026학년도 입시 계산기</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body class="index-page">
+
+    <!-- Background Slideshow -->
+    <div id="bg-slideshow"></div>
+    <div id="bg-overlay"></div>
+
+    <script>
+        const images = [
+            'media/background/cnu_0463.jpg',
+            'media/background/cnu_0467.jpg',
+            'media/background/cnu_0470-1.jpg',
+            'media/background/cnu_0472-1.jpg',
+            'media/background/cnu_0474.jpg'
+        ];
+
+        const slideshowContainer = document.getElementById('bg-slideshow');
+        let currentIndex = 0;
+
+        // Preload images and create divs
+        images.forEach((src, index) => {
+            const div = document.createElement('div');
+            div.className = 'slide-item';
+            div.style.backgroundImage = `url('${src}')`;
+            if (index === 0) div.classList.add('active');
+            slideshowContainer.appendChild(div);
+        });
+
+        function changeSlide() {
+            const slides = document.querySelectorAll('.slide-item');
+            if (slides.length > 0) {
+                slides[currentIndex].classList.remove('active');
+                currentIndex = (currentIndex + 1) % slides.length;
+                slides[currentIndex].classList.add('active');
+            }
+        }
+
+        setInterval(changeSlide, 5000); // Change every 5 seconds
+    </script>
+
+    <div class="content-wrapper">
+        <div class="logo-area">
+            <img src="media/cnu_logo.png" alt="충남대학교" class="main-logo">
+            <p class="sub-title">비공식 2026학년도 충남대학교 입학 점수 환산</p>
+        </div>
+
+        <div class="card-container">
+            <a href="susi.html" class="card main-card">
+
+                <h2>수시 점수 환산</h2>
+                <p>학생부교과 전형<br>교과 성적 입력</p>
+                <span class="btn-go">바로가기 &rarr;</span>
+            </a>
+
+            <a href="jungsi.html" class="card main-card">
+
+                <h2>정시 점수 환산</h2>
+                <p>수능 위주 전형<br>표준점수 입력</p>
+                <span class="btn-go">바로가기 &rarr;</span>
+            </a>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-info">
+            <p><span class="strong">대덕캠퍼스</span> | 34134 대전광역시 유성구 대학로 99</p>
+            <p><span class="strong">보운캠퍼스</span> | 35015 대전광역시 중구 문화로 266</p>
+            <p><span class="strong">세종캠퍼스</span> | 30016 세종특별자치시 대평동 570-1</p>
+            <p><span class="strong">입학본부</span> | Tel. 1644-8433</p>
+            <p style="margin-top: 15px; color: #aaa;">COPYRIGHT ⓒ 모집요강 : 충남대학교, 웹 : Choi Minseo</p>
+            <p style="margin-top: 15px; color: #aaa;">환산 계산식의 구현 오류 등으로 인한 책임은 사용자 본인에게 있으며, 개발자는 책임지지 않습니다.</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>

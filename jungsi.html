@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>정시 점수 환산</title>
+    <link rel="stylesheet" href="jungsi.css">
+</head>
+
+<body>
+    <!-- Background Slideshow -->
+    <div id="bg-slideshow"></div>
+    <div id="bg-overlay"></div>
+
+    <script>
+        const images = [
+            'media/background/cnu_0463.jpg',
+            'media/background/cnu_0467.jpg',
+            'media/background/cnu_0470-1.jpg',
+            'media/background/cnu_0472-1.jpg',
+            'media/background/cnu_0474.jpg'
+        ];
+        const slideshowContainer = document.getElementById('bg-slideshow');
+        let currentIndex = 0;
+        images.forEach((src, index) => {
+            const div = document.createElement('div');
+            div.className = 'slide-item';
+            div.style.backgroundImage = `url('${src}')`;
+            if (index === 0) div.classList.add('active');
+            slideshowContainer.appendChild(div);
+        });
+        function changeSlide() {
+            const slides = document.querySelectorAll('.slide-item');
+            if (slides.length > 0) {
+                slides[currentIndex].classList.remove('active');
+                currentIndex = (currentIndex + 1) % slides.length;
+                slides[currentIndex].classList.add('active');
+            }
+        }
+        setInterval(changeSlide, 5000);
+    </script>
+
+    <div class="content-wrapper">
+        <div class="container">
+            <h1>2026학년도 정시 수능 점수 환산</h1>
+
+            <div class="excluded-notice">
+                <p><strong>⚠️ 현재 계산기는 수능 100% 전형 (수능 위주)을 기준으로 합니다.</strong></p>
+                <p><strong>실기/면접/체력이 포함된 다음 전형은 제외됩니다:</strong></p>
+                <ul>
+                    <li>수능·실기(일반전형): 체육교육과, 음악과, 관현악과, 무용학과, 회화과, 조소과, 디자인창의학과</li>
+                    <li>수능(국가안보융합전형): 국토안보학전공, 해양안보학전공</li>
+                </ul>
+            </div>
+
+            <form id="jungsi-form">
+
+                <h2>모집단위 및 탐구 영역 지정 확인</h2>
+                <div class="form-group">
+                    <label for="department">모집단위 선택 (수능 100% 전형 기준)</label>
+                    <select id="department" required onchange="updateDepartmentInfo()">
+                        <option value="">-- 모집단위를 선택하세요 --</option>
+                        <optgroup label="인문계열 (국45/수25/탐30)">
+                            <option value="HUM_NO_GASAN">인문대, 사과대, 경상대, 국어교육, 영어교육, 교육학과, 국제학부 등</option>
+                        </optgroup>
+                        <optgroup label="자연계열 (국25/수45/탐30 - 과탐 가산 10%)">
+                            <option value="NAT_GASAN">공대, 간호대, 생명시스템과학대 등</option>
+                        </optgroup>
+                        <optgroup label="자연계열 (국25/수45/탐30 - 과탐 필수/가산 없음)">
+                            <option value="NAT_SCIENCE_MUST_SCIENCE">의예과, 약학과, 수의예과 (탐구: 과학탐구 2과목 필수)</option>
+                        </optgroup>
+                        <optgroup label="전공자율선택제">
+                            <option value="JAJUN">자율전공융합학부 (국35/수35/탐30)</option>
+                        </optgroup>
+                        <optgroup label="예체능계열">
+                            <option value="PE_SCIENCE">자연과학대학(스포츠과학과) (국40/수30/탐30)</option>
+                            <option value="ART_DESIGN">디자인창의학과 (국60/탐40, 수학 미반영)</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="input-row">
+                    <div>
+                        <label for="탐구_유형">응시한 탐구 과목 유형</label>
+                        <select id="탐구_유형" required onchange="checkSupportStatus()">
+                            <option value="">-- 선택 --</option>
+                            <option value="과탐_2">과학탐구 2과목</option>
+                            <option value="사탐_2">사회탐구 2과목</option>
+                            <option value="직탐_2">직업탐구 2과목</option>
+                            <option value="혼합_과1사1">혼합 (과탐 1 + 사탐 1)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div id="support-status" class="support-status"
+                            style="display: none; padding: 12px; border-radius: 8px; font-weight: 500;">지원 가능 여부</div>
+                    </div>
+                </div>
+                <div id="department-info" class="notice" style="display: none;"></div>
+
+                <h2>수능 영역별 성적 입력 (표준점수)</h2>
+
+                <div class="input-row">
+                    <div>
+                        <label for="국어_표준">국어 표준점수</label>
+                        <input type="number" id="국어_표준" min="0" required>
+                    </div>
+                    <div>
+                        <label for="수학_표준">수학 표준점수</label>
+                        <input type="number" id="수학_표준" min="0" required>
+                    </div>
+                    <div>
+                        <label for="탐구1_표준">탐구1 표준점수</label>
+                        <input type="number" id="탐구1_표준" min="0" required>
+                    </div>
+                    <div>
+                        <label for="탐구2_표준">탐구2 표준점수</label>
+                        <input type="number" id="탐구2_표준" min="0" required>
+                    </div>
+                </div>
+
+                <h2>영어/한국사 등급 및 기타 감점</h2>
+                <div class="input-row">
+                    <div>
+                        <label for="영어_등급">영어 등급 (1~9)</label>
+                        <input type="number" id="영어_등급" min="1" max="9" required>
+                    </div>
+                    <div>
+                        <label for="한국사_등급">한국사 등급 (1~9)</label>
+                        <input type="number" id="한국사_등급" min="1" max="9" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="violence_penalty">학교폭력 조치사항 (최종 호수 기준 감점)</label>
+                    <select id="violence_penalty">
+                        <option value="0">해당 없음</option>
+                        <option value="1">1~3호 (-2점 / 200점 만점 기준: -4점)</option>
+                        <option value="2">4~5호 (-6점 / 200점 만점 기준: -12점)</option>
+                        <option value="3">6~7호 (-10점 / 200점 만점 기준: -20점)</option>
+                        <option value="4">8~9호 (-20점 / 200점 만점 기준: -40점)</option>
+                    </select>
+                </div>
+
+                <button type="submit">정시 점수 환산하기</button>
+            </form>
+
+            <div id="result" class="result-box" style="display: none;">
+                <h2>최종 수능 환산점수</h2>
+                <div class="final-score-display"><span id="final_total"></span>점</div>
+
+                <p><strong>세부 감점 내역</strong></p>
+                <div class="result-item"><strong>과탐 가산점 적용 여부 및 점수:</strong> <span id="gasan_score_status"></span></div>
+                <div class="result-item"><strong>영어 등급 감점:</strong> <span id="english_deduction"></span>점</div>
+                <div class="result-item"><strong>한국사 등급 감점:</strong> <span id="history_deduction"></span>점</div>
+                <div class="result-item"><strong>학교폭력 감점:</strong> <span id="violence_deduction"></span>점</div>
+
+                <p style="margin-top: 15px; border-top: 1px dashed #cceeff; padding-top: 10px;">
+                    * 수능 총 환산 표준점수 (감점 적용 전): <span id="final_score"></span>점
+                </p>
+            </div>
+
+            <a href="index.html" class="back-link">메인 페이지로 돌아가기</a>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-info">
+            <p style="margin-top: 15px; color: #aaa;">COPYRIGHT ⓒ 모집요강 : 충남대학교, 웹 : Choi Minseo</p>
+            <p style="margin-top: 15px; color: #aaa;">환산 계산식의 구현 오류 등으로 인한 책임은 사용자 본인에게 있으며, 개발자는 책임지지 않습니다.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('jungsi-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            calculateJungsiScore();
+        });
+
+        // 탐구 유형 변경 시 지원 가능 여부 확인
+        document.getElementById('탐구_유형').addEventListener('change', checkSupportStatus);
+        document.getElementById('department').addEventListener('change', checkSupportStatus);
+
+        function updateDepartmentInfo() {
+            const dept = document.getElementById('department').value;
+            const infoBox = document.getElementById('department-info');
+            infoBox.style.display = 'block';
+
+            if (dept === 'HUM_NO_GASAN') {
+                infoBox.innerHTML = "선택: 인문계열 | 반영점수(300점 기준): 국 135점, 수 75점, 탐 90점 | 탐구: 사/과/직탐 모두 가능, 가산점 미적용";
+            } else if (dept === 'NAT_GASAN') {
+                infoBox.innerHTML = "선택: 자연계열(과탐 가산) | 반영점수(300점 기준): 국 75점, 수 135점, 탐 90점 | 탐구: 사/과/직탐 모두 가능, 과학탐구 포함 시 10% 가산 적용";
+            } else if (dept === 'NAT_SCIENCE_MUST_SCIENCE') {
+                infoBox.innerHTML = "선택: 의예/약학/수의예과 | 반영점수(300점 기준): 국 75점, 수 135점, 탐 90점 | 탐구: 과학탐구 2과목 필수 응시, 가산점 미적용";
+            } else if (dept === 'JAJUN') {
+                infoBox.innerHTML = "선택: 자율전공융합학부 | 반영점수(300점 기준): 국 105점, 수 105점, 탐 90점 | 탐구: 사/과/직탐 모두 가능, 가산점 미적용";
+            } else if (dept === 'PE_SCIENCE') {
+                infoBox.innerHTML = "선택: 스포츠과학과 | 반영점수(300점 기준): 국 120점, 수 90점, 탐 90점 | 탐구: 사/과/직탐 모두 가능, 가산점 미적용";
+            } else if (dept === 'ART_DESIGN') {
+                infoBox.innerHTML = "선택: 디자인창의학과 | 반영점수(200점 기준): 국 120점, 탐 80점 (수학 미반영) | 탐구: 사/과/직탐 모두 가능, 가산점 미적용.";
+            } else {
+                infoBox.innerHTML = "<span class='error'>모집단위를 선택해주세요.</span>";
+            }
+            checkSupportStatus();
+        }
+
+        function isScience(탐구_유형) {
+            // 과탐 1과목 이상 응시 시 과학탐구 응시자로 간주
+            return ['과탐_2', '혼합_과1사1'].includes(탐구_유형);
+        }
+
+        function checkSupportStatus() {
+            const dept = document.getElementById('department').value;
+            const 탐구_유형 = document.getElementById('탐구_유형').value;
+            const statusBox = document.getElementById('support-status');
+
+            statusBox.style.display = 'block';
+
+            if (!dept || !탐구_유형) {
+                statusBox.className = 'support-status status-caution';
+                statusBox.textContent = "모집단위와 탐구 유형을 모두 선택해 주세요.";
+                statusBox.style.backgroundColor = '#fff3cd';
+                statusBox.style.color = '#856404';
+                return false;
+            }
+
+            if (dept === 'NAT_SCIENCE_MUST_SCIENCE') {
+                // 의예/약학/수의예: 과탐 2과목 필수
+                if (탐구_유형 === '과탐_2') {
+                    statusBox.className = 'support-status status-ok';
+                    statusBox.textContent = "지원 가능! (과탐 2과목 필수 충족)";
+                    statusBox.style.backgroundColor = '#d4edda';
+                    statusBox.style.color = '#155724';
+                } else {
+                    statusBox.className = 'support-status status-fail';
+                    statusBox.textContent = "지원 불가. (의예/약학/수의예는 과탐 2과목 필수)";
+                    statusBox.style.backgroundColor = '#f8d7da';
+                    statusBox.style.color = '#721c24';
+                    return false;
+                }
+            } else if (dept === 'NAT_GASAN' && isScience(탐구_유형)) {
+                // 공대 등: 사/과/직탐 가능, 과탐 응시 시 가산
+                statusBox.className = 'support-status status-caution';
+                statusBox.textContent = "지원 가능! (과학탐구 포함으로 표준점수 10% 가산 적용)";
+                statusBox.style.backgroundColor = '#d4edda';
+                statusBox.style.color = '#155724';
+            } else if (탐구_유형 === '직탐_2' && dept === 'ART_DESIGN') {
+                // 디자인창의학과는 직탐도 가능 (가산 미적용)
+                statusBox.className = 'support-status status-ok';
+                statusBox.textContent = "지원 가능! (가산점 미적용)";
+                statusBox.style.backgroundColor = '#d4edda';
+                statusBox.style.color = '#155724';
+            } else if (탐구_유형 === '직탐_2') {
+                // 직탐 2과목 응시 시, 직탐이 명시된 모집단위(ART_DESIGN) 외에는 지원 불가로 간주
+                statusBox.className = 'support-status status-fail';
+                statusBox.textContent = "지원 불가. (직업탐구 응시 불가 모집단위)";
+                statusBox.style.backgroundColor = '#f8d7da';
+                statusBox.style.color = '#721c24';
+                return false;
+            } else {
+                // 나머지 (사탐 2, 혼합 등)는 가산 없이 지원 가능
+                statusBox.className = 'support-status status-ok';
+                statusBox.textContent = "지원 가능! (가산점 미적용)";
+                statusBox.style.backgroundColor = '#d4edda';
+                statusBox.style.color = '#155724';
+            }
+            return true;
+        }
+
+        function getDeduction(deductionType, grade) {
+            // 영어 감점표
+            const englishDeductionMap = {
+                '인문/자연/자율전공': { 1: 0, 2: -2, 3: -5, 4: -8, 5: -11, 6: -14, 7: -18, 8: -22, 9: -26 },
+                '체육계': { 1: 0, 2: -1.5, 3: -3, 4: -4.5, 5: -6, 6: -7.5, 7: -9, 8: -10.5, 9: -12 },
+                '음악/미술계': { 1: 0, 2: -1, 3: -2, 4: -3, 5: -4, 6: -5, 7: -6, 8: -7, 9: -8 }
+            };
+            // 한국사 감점표
+            const historyDeductionMap = { 1: 0, 2: 0, 3: 0, 4: 0, 5: -1, 6: -1, 7: -2, 8: -2, 9: -2 };
+
+            if (deductionType === '한국사') {
+                return historyDeductionMap[grade] || 0;
+            } else if (deductionType === 'ART_DESIGN' || deductionType === 'PE_SCIENCE') {
+                const mapKey = deductionType === 'ART_DESIGN' ? '음악/미술계' : '체육계';
+                return englishDeductionMap[mapKey][grade] || 0;
+            } else {
+                return englishDeductionMap['인문/자연/자율전공'][grade] || 0;
+            }
+        }
+
+        function calculateJungsiScore() {
+            if (!checkSupportStatus()) {
+                document.getElementById('result').style.display = 'none';
+                alert("지원 불가 조건으로 인해 점수 환산을 중단합니다.");
+                return;
+            }
+
+            const dept = document.getElementById('department').value;
+            const 탐구_유형 = document.getElementById('탐구_유형').value;
+
+            const 국어_표준 = parseFloat(document.getElementById('국어_표준').value);
+            const 수학_표준 = parseFloat(document.getElementById('수학_표준').value);
+            const 탐구1_표준 = parseFloat(document.getElementById('탐구1_표준').value);
+            const 탐구2_표준 = parseFloat(document.getElementById('탐구2_표준').value);
+            const 영어_등급 = parseInt(document.getElementById('영어_등급').value);
+            const 한국사_등급 = parseInt(document.getElementById('한국사_등급').value);
+            const penalty_level = document.getElementById('violence_penalty').value;
+
+            let 국어_반영점수 = 0, 수학_반영점수 = 0, 탐구_반영점수 = 0;
+            let deduction_type = dept;
+            let divisor = 200;
+            let total_gasan_score = 0;
+            let 탐구_표준_합산 = 탐구1_표준 + 탐구2_표준;
+
+            // 1. 영역별 반영 점수 및 타입 설정
+            if (dept === 'HUM_NO_GASAN') {
+                국어_반영점수 = 135; 수학_반영점수 = 75; 탐구_반영점수 = 90; deduction_type = '인문/자연/자율전공';
+            } else if (dept === 'NAT_GASAN' || dept === 'NAT_SCIENCE_MUST_SCIENCE') {
+                국어_반영점수 = 75; 수학_반영점수 = 135; 탐구_반영점수 = 90; deduction_type = '인문/자연/자율전공';
+            } else if (dept === 'JAJUN') {
+                국어_반영점수 = 105; 수학_반영점수 = 105; 탐구_반영점수 = 90; deduction_type = '인문/자연/자율전공';
+            } else if (dept === 'PE_SCIENCE') {
+                국어_반영점수 = 120; 수학_반영점수 = 90; 탐구_반영점수 = 90; deduction_type = '체육계';
+            } else if (dept === 'ART_DESIGN') {
+                국어_반영점수 = 120; 수학_반영점수 = 0; 탐구_반영점수 = 80; deduction_type = '음악/미술계';
+            }
+
+            // 2. 탐구 가산점 적용
+            if (dept === 'NAT_GASAN' && isScience(탐구_유형)) {
+                // 과학탐구 1과목 이상 응시 시, 탐구 영역 전체 표준점수에 10% 가산 적용
+                total_gasan_score = (탐구1_표준 * 0.10) + (탐구2_표준 * 0.10);
+                탐구_표준_합산 *= 1.10; // 탐구 표준점수 합산에 10% 가산 적용
+            }
+
+            // 3. 환산 표준점수 총 합산 (요강 52쪽 예시의 분자)
+            const total_reflection_value =
+                (국어_표준 * 국어_반영점수) +
+                (수학_표준 * 수학_반영점수) +
+                (탐구_표준_합산 * 탐구_반영점수);
+
+            // 4. 수능 총 환산 점수 (52쪽 예시: [{...}/200])
+            let final_score_raw = total_reflection_value / divisor;
+
+            // 5. 영어/한국사 감점 계산 (51쪽)
+            const english_deduction = getDeduction(deduction_type, 영어_등급);
+            const history_deduction = getDeduction('한국사', 한국사_등급);
+
+            // 6. 학교폭력 감점 계산 (53쪽)
+            let violence_deduction = 0;
+            let total_score_for_penalty = (dept === 'ART_DESIGN') ? 200 : 300; // 감점 기준 총점
+
+            const base_deduction_rate = [0, 0.02, 0.06, 0.10, 0.20][parseInt(penalty_level)];
+
+            if (base_deduction_rate > 0) {
+                // 감점은 수능성적 총점(300점 또는 200점)을 기준으로 함.
+                violence_deduction = -(total_score_for_penalty * base_deduction_rate);
+            }
+
+            // 7. 최종 총점 계산
+            let final_total = final_score_raw + english_deduction + history_deduction + violence_deduction;
+
+            // 8. 결과 출력
+
+            let gasan_status_text = '미적용 (0.000점)';
+            if (total_gasan_score > 0) {
+                gasan_status_text = `적용 (점수: ${total_gasan_score.toFixed(3)}점)`;
+            }
+
+            document.getElementById('gasan_score_status').textContent = gasan_status_text;
+            document.getElementById('final_score').textContent = final_score_raw.toFixed(3);
+            document.getElementById('english_deduction').textContent = english_deduction.toFixed(1);
+            document.getElementById('history_deduction').textContent = history_deduction.toFixed(1);
+            document.getElementById('violence_deduction').textContent = violence_deduction.toFixed(1);
+            document.getElementById('final_total').textContent = final_total.toFixed(3);
+
+            document.getElementById('result').style.display = 'block';
+        }
+    </script>
+</body>
+
+</html>
