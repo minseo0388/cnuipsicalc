@@ -228,12 +228,12 @@
                 // 의예/약학/수의예: 과탐 2과목 필수
                 if (탐구_유형 === '과탐_2') {
                     statusBox.className = 'support-status status-ok';
-                    statusBox.textContent = "지원 가능! (과탐 2과목 필수 충족)";
+                    statusBox.textContent = "지원 가능 (과탐 2과목 필수 충족)";
                     statusBox.style.backgroundColor = '#d4edda';
                     statusBox.style.color = '#155724';
                 } else {
                     statusBox.className = 'support-status status-fail';
-                    statusBox.textContent = "지원 불가. (의예/약학/수의예는 과탐 2과목 필수)";
+                    statusBox.textContent = "지원 불가 (의예/약학/수의예는 과탐 2과목 필수)";
                     statusBox.style.backgroundColor = '#f8d7da';
                     statusBox.style.color = '#721c24';
                     return false;
@@ -241,26 +241,26 @@
             } else if (dept === 'NAT_GASAN' && isScience(탐구_유형)) {
                 // 공대 등: 사/과/직탐 가능, 과탐 응시 시 가산
                 statusBox.className = 'support-status status-caution';
-                statusBox.textContent = "지원 가능! (과학탐구 포함으로 표준점수 10% 가산 적용)";
+                statusBox.textContent = "지원 가능 (과학탐구 표준점수 10% 가산)";
                 statusBox.style.backgroundColor = '#d4edda';
                 statusBox.style.color = '#155724';
             } else if (탐구_유형 === '직탐_2' && dept === 'ART_DESIGN') {
                 // 디자인창의학과는 직탐도 가능 (가산 미적용)
                 statusBox.className = 'support-status status-ok';
-                statusBox.textContent = "지원 가능! (가산점 미적용)";
+                statusBox.textContent = "지원 가능 (가산점 미적용)";
                 statusBox.style.backgroundColor = '#d4edda';
                 statusBox.style.color = '#155724';
             } else if (탐구_유형 === '직탐_2') {
                 // 직탐 2과목 응시 시, 직탐이 명시된 모집단위(ART_DESIGN) 외에는 지원 불가로 간주
                 statusBox.className = 'support-status status-fail';
-                statusBox.textContent = "지원 불가. (직업탐구 응시 불가 모집단위)";
+                statusBox.textContent = "지원 불가 (직업탐구 응시 불가 모집단위)";
                 statusBox.style.backgroundColor = '#f8d7da';
                 statusBox.style.color = '#721c24';
                 return false;
             } else {
                 // 나머지 (사탐 2, 혼합 등)는 가산 없이 지원 가능
                 statusBox.className = 'support-status status-ok';
-                statusBox.textContent = "지원 가능! (가산점 미적용)";
+                statusBox.textContent = "지원 가능 (가산점 미적용)";
                 statusBox.style.backgroundColor = '#d4edda';
                 statusBox.style.color = '#155724';
             }
